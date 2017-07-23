@@ -1,0 +1,13 @@
+[Unit]
+Description=Salt Yet Another aPI
+Documentation=no docs
+After=network.target
+
+[Service]
+Type=Simple
+LimitNOFILE=8192
+ExecStart=/usr/bin/salt-yapi.py
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target
