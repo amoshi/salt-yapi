@@ -20,9 +20,8 @@ class S(BaseHTTPRequestHandler):
 		self.end_headers()
 		
 	def do_POST(self):
-		# Doesn't do anything with posted data
-		content_length = int(self.headers['Content-Length']) # <--- Gets the size of data
-		post_data = self.rfile.read(content_length) # <--- Gets the data itself
+		content_length = int(self.headers['Content-Length'])
+		post_data = self.rfile.read(content_length)
 		self._set_headers()
 		api_json_arr = json.loads(post_data)
 		for api_query in api_json_arr:
