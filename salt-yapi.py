@@ -30,7 +30,10 @@ class S(BaseHTTPRequestHandler):
 		rsend = {}
 		rsend["return"] = []
 		api_json_arr = json.loads(post_data)
+		fd = open("/var/log/salt-yapi.log", "a")
+		fd.write("\n-----\n")
 		for api_query in api_json_arr:
+			fd.write(json.dumps(api_json_arr))
 			call_cli_cmd = []
 			call_cli_cmd.append("salt")
 
@@ -68,6 +71,8 @@ class S(BaseHTTPRequestHandler):
 			if out_format == "json":
 				out_format = api_query.get("out_format", "json")
 			call_cli_cmd.append("--out={out_format}".format(out_format=out_format))
+			if out_format == "json":
+				call_cli_cmd.append("-s")
 
 			batch_size = salt_kwarg.get("batch-size", None)
 			if batch_size is None:
@@ -115,23 +120,24 @@ class S(BaseHTTPRequestHandler):
 			if pillar is not None:
 				call_cli_cmd.append("pillar='{pillar}'".format(pillar=json.dumps(pillar)))
 					
+			fd.write("\n++++\n")
 			call_cli_str = " ".join(call_cli_cmd)
+			fd.write(call_cli_str)
+			#send_notification(api_json_arr, call_cli_str, " ")
+			print call_cli_str
 			salt_call = Popen(call_cli_str, shell=True, stdin=PIPE, stdout=PIPE, close_fds=True)
 			salt_output = salt_call.stdout.read()
-
-			fd = open("/var/log/salt-yapi.log", "a")
-			fd.write("\n-----\n")
-			fd.write(json.dumps(api_json_arr))
-			fd.write("\n++++\n")
-			fd.write(call_cli_str)
 			fd.write("\n++++\n")
 			fd.write(salt_output)
-			fd.write("\n-----\n")
-			#send_notification(api_json_arr, call_cli_str, " ")
-			fd.close()
 
-			rsend["return"].append(json.loads(salt_output))
 
+			rsend["return"].append(json.loads(salt_output.strip()))
+
+		fd.write("\n++++\n")
+		fd.write(json.dumps(rsend))
+		fd.write("\n-----\n")
+		#send_notification(api_json_arr, call_cli_str, " ")
+		fd.close()
 		self.wfile.write(json.dumps(rsend))
 				
 def run(server_class=HTTPServer, handler_class=S, port=8082):
