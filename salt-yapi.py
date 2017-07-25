@@ -5,6 +5,8 @@ import json
 from subprocess import Popen, PIPE, STDOUT
 from notifications import send_notification
 
+allowed_fun = ["state.sls", "state.highstate", "cmd.run", "pillar.get", "grains.get", "service.restart", "service.status"]
+
 class S(BaseHTTPRequestHandler):
 	def _set_headers(self):
 		self.send_response(200)
@@ -24,8 +26,14 @@ class S(BaseHTTPRequestHandler):
 		content_length = int(self.headers['Content-Length'])
 		post_data = self.rfile.read(content_length)
 		self._set_headers()
+
+		rsend = {}
+		rsend["return"] = []
 		api_json_arr = json.loads(post_data)
 		for api_query in api_json_arr:
+			call_cli_cmd = []
+			call_cli_cmd.append("salt")
+
 			if api_query["tgt"] is None:
 				self.wfile.write('{"type":"error","class":"not defined","variable":"tgt","msg":"tgt is not defined"}\n')
 				return
@@ -42,69 +50,89 @@ class S(BaseHTTPRequestHandler):
 				self.wfile.write('{"type":"error","class":"not defined","variable":"password","msg":"password is not defined"}\n')
 				return
 			salt_args = api_query.get("arg", "")
-			expr_form = api_query.get("expr_form", "default")
-			tgt = api_query["tgt"]
-			fun = api_query["fun"]
 			username = api_query.get("username", "")
 			password = api_query.get("password", "")
-			salt_kwarg = api_query.get("kwarg", "")
-			if len(api_query["arg"]) > 1:
-				saltenv = api_query["arg"][1]
-			else:
-				saltenv = salt_kwarg.get("saltenv", "base")
-				if saltenv == "base":
-					saltenv = api_query.get("saltenv", "base")
-			salt_arg = api_query["arg"][0]
-			client = api_query.get("client", "local")
-			eauth = api_query.get("eauth", "")
-			pillar = salt_kwarg.get("pillar", "")
-			test = salt_kwarg.get("test", False)
-			if not test:
-				test = api_query.get("test", False)
-					
-			state_verbose = salt_kwarg.get("state_verbose", True)
+			salt_kwarg = api_query.get("kwarg", {})
+
+			state_verbose = salt_kwarg.get("state_verbose", False)
 			if not state_verbose:
-				state_verbose = api_query.get("state_verbose", True)
+				state_verbose = api_query.get("state_verbose", False)
+			call_cli_cmd.append("--state_verbose={state_verbose}".format(state_verbose=state_verbose))
 
 			timeout = salt_kwarg.get("timeout", 90)
 			if timeout == 90:
 				timeout = api_query.get("timeout", 90)
+			call_cli_cmd.append("-t {timeout}".format(timeout=timeout))
 
 			out_format = salt_kwarg.get("out", "json")
 			if out_format == "json":
 				out_format = api_query.get("out_format", "json")
+			call_cli_cmd.append("--out={out_format}".format(out_format=out_format))
 
-			batch_size = salt_kwarg.get("batch-size", 0)
-			if batch_size == 0:
-				batch_size = api_query.get("batch-size", "")
+			batch_size = salt_kwarg.get("batch-size", None)
+			if batch_size is None:
+				batch_size = api_query.get("batch-size", None)
+			if batch_size is not None:
+				call_cli_cmd.append("--batch-size={batch_size}".format(batch_size=batch_size))
 
-			if batch_size == "":
-				batch_size_ins = ""
+			expr_form = api_query.get("expr_form", None)
+			if expr_form is not None:
+				call_cli_cmd.append("--{expr_form}".format(expr_form=expr_form))
+
+			tgt = api_query["tgt"]
+			call_cli_cmd.append("'{tgt}'".format(tgt=tgt))
+
+			fun = api_query["fun"]
+			if fun in allowed_fun:
+				call_cli_cmd.append(fun)
 			else:
-				batch_size_ins = " --batch-size " + str(batch_size) + " "
+				self.wfile.write('{"type":"error","class":"not allowed","variable":"fun","msg":"fun \"' + fun + '\" is not allowed"}\n')
+				return
 
-			if expr_form == "default":
-				expr_form_cli = ""
+			if len(api_query["arg"]) != 0:
+				salt_arg = api_query["arg"][0]
+				call_cli_cmd.append(salt_arg)
+
+			if len(api_query["arg"]) > 1:
+				saltenv = api_query["arg"][1]
+				call_cli_cmd.append("saltenv={saltenv}".format(saltenv=saltenv))
 			else:
-				expr_form_cli = "--" + expr_form
+				saltenv = salt_kwarg.get("saltenv", None)
+				if saltenv is None:
+					saltenv = api_query.get("saltenv", None)
+				if saltenv is not None:
+					call_cli_cmd.append("saltenv={saltenv}".format(saltenv=saltenv))
 
-			call_cli_cmd = "salt --state_verbose=" + str(state_verbose) + batch_size_ins + " -t " + str(timeout) + " --out=" + out_format + " " + expr_form_cli + " '" + tgt + "' " + fun + " " + salt_arg + " saltenv="  + saltenv +  " pillar='" + json.dumps(pillar) + "' test=" + str(test)
-
-			salt_call = Popen(call_cli_cmd, shell=True, stdin=PIPE, stdout=PIPE,
-			stderr=STDOUT, close_fds=True)
-			#self.wfile.write(call_cli_cmd)
+			test = salt_kwarg.get("test", None)
+			if test is None:
+				test = api_query.get("test", False)
+			if test:
+				call_cli_cmd.append("test=True")
+				
+			client = api_query.get("client", "local")
+			eauth = api_query.get("eauth", "")
+			pillar = salt_kwarg.get("pillar", None)
+			if pillar is not None:
+				call_cli_cmd.append("pillar='{pillar}'".format(pillar=json.dumps(pillar)))
+					
+			call_cli_str = " ".join(call_cli_cmd)
+			salt_call = Popen(call_cli_str, shell=True, stdin=PIPE, stdout=PIPE, close_fds=True)
 			salt_output = salt_call.stdout.read()
-			self.wfile.write(json.dumps(salt_output))
+
 			fd = open("/var/log/salt-yapi.log", "a")
 			fd.write("\n-----\n")
 			fd.write(json.dumps(api_json_arr))
 			fd.write("\n++++\n")
-			fd.write(call_cli_cmd)
+			fd.write(call_cli_str)
 			fd.write("\n++++\n")
 			fd.write(salt_output)
 			fd.write("\n-----\n")
-			#send_notification(api_json_arr, call_cli_cmd, " ")
+			#send_notification(api_json_arr, call_cli_str, " ")
 			fd.close()
+
+			rsend["return"].append(json.loads(salt_output))
+
+		self.wfile.write(json.dumps(rsend))
 				
 def run(server_class=HTTPServer, handler_class=S, port=8082):
 	server_address = ('', port)
