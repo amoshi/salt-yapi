@@ -24,7 +24,7 @@ class S(BaseHTTPRequestHandler):
 
 	def changesonlyout(self, salt_out):
 		rsr={}
-		rsr['return']
+		rsr['return']=[]
 		for return_ in salt_out['return']:
 			for r  in return_:
 				for k, v in return_[r].items():
