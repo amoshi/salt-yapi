@@ -23,12 +23,14 @@ class S(BaseHTTPRequestHandler):
 		self.end_headers()
 
 	def changesonlyout(salt_out):
+		rsr=[]
 		for return_ in salt_out['return']:
 			for r  in return_:
 				for k, v in return_[r].items():
 					if type(v) is not int:
 						if 'diff' in v['changes']:
-							return(v)
+							rsr.append({r: {k: v }})
+							return(rsr)
 
 	def do_POST(self):
 		content_length = int(self.headers['Content-Length'])
@@ -138,8 +140,7 @@ class S(BaseHTTPRequestHandler):
 			fd.write("\n++++\n")
 			fd.write(changesonlyout(salt_output))
 
-
-			rsend["return"].append(json.loads(changesonlyout(salt_output)lf))
+			rsend["return"].append(json.loads(changesonlyout(salt_output)))
 
 		fd.write("\n++++\n")
 		fd.write(json.dumps(rsend))
