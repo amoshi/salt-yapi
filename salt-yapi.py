@@ -22,14 +22,15 @@ class S(BaseHTTPRequestHandler):
 		self.send_response(403)
 		self.end_headers()
 
-	def changesonlyout(salt_out):
-		rsr=[]
+	def changesonlyout(self, salt_out):
+		rsr={}
+		rsr['return']
 		for return_ in salt_out['return']:
 			for r  in return_:
 				for k, v in return_[r].items():
 					if type(v) is not int:
 						if 'diff' in v['changes']:
-							rsr.append({r: {k: v }})
+							rsr['return'].append({r: {k: v }})
 							return(rsr)
 
 	def do_POST(self):
@@ -138,16 +139,17 @@ class S(BaseHTTPRequestHandler):
 			salt_call = Popen(call_cli_str, shell=True, stdin=PIPE, stdout=PIPE, close_fds=True)
 			salt_output = salt_call.stdout.read()
 			fd.write("\n++++\n")
-			fd.write(changesonlyout(salt_output))
+			fd.write(salt_output)
 
-			rsend["return"].append(json.loads(changesonlyout(salt_output)))
+
+			rsend["return"].append(json.loads(salt_output.strip()))
 
 		fd.write("\n++++\n")
 		fd.write(json.dumps(rsend))
 		fd.write("\n-----\n")
 		#send_notification(api_json_arr, call_cli_str, " ")
 		fd.close()
-		self.wfile.write(json.dumps(rsend))
+		self.wfile.write(json.dumps(self.changesonlyout(rsend)))
 				
 def run(server_class=HTTPServer, handler_class=S, port=8082):
 	server_address = ('', port)
