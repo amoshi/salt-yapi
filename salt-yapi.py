@@ -31,7 +31,7 @@ class S(BaseHTTPRequestHandler):
 					if type(v) is not int:
 						if 'diff' in v['changes']:
 							rsr['return'].append({r: {k: v }})
-							return(rsr)
+		return(rsr)
 
 	def do_POST(self):
 		content_length = int(self.headers['Content-Length'])
