@@ -24,14 +24,14 @@ class S(BaseHTTPRequestHandler):
 
 	def changesonlyout(self, salt_out):
 		rsr={}
-		rsr['return']
+		rsr['return']=[]
 		for return_ in salt_out['return']:
 			for r  in return_:
 				for k, v in return_[r].items():
 					if type(v) is not int:
 						if 'diff' in v['changes']:
 							rsr['return'].append({r: {k: v }})
-							return(rsr)
+		return(rsr)
 
 	def do_POST(self):
 		content_length = int(self.headers['Content-Length'])
