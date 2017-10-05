@@ -23,7 +23,7 @@ class S(BaseHTTPRequestHandler):
 		self.end_headers()
 
 	def changesonlyout(salt_out):
-		for return_ in jsl['return']:
+		for return_ in salt_out['return']:
 			for r  in return_:
 				for k, v in return_[r].items():
 					if type(v) is not int:
@@ -139,7 +139,7 @@ class S(BaseHTTPRequestHandler):
 			fd.write(changesonlyout(salt_output))
 
 
-			rsend["return"].append(json.loads(salt_output.strip()))
+			rsend["return"].append(json.loads(changesonlyout(salt_output)lf))
 
 		fd.write("\n++++\n")
 		fd.write(json.dumps(rsend))
