@@ -21,7 +21,15 @@ class S(BaseHTTPRequestHandler):
 	def do_HEAD(self):
 		self.send_response(403)
 		self.end_headers()
-		
+
+	def changesonlyout(salt_out):
+		for return_ in jsl['return']:
+			for r  in return_:
+				for k, v in return_[r].items():
+					if type(v) is not int:
+						if 'diff' in v['changes']:
+							return(v)
+
 	def do_POST(self):
 		content_length = int(self.headers['Content-Length'])
 		post_data = self.rfile.read(content_length)
@@ -128,7 +136,7 @@ class S(BaseHTTPRequestHandler):
 			salt_call = Popen(call_cli_str, shell=True, stdin=PIPE, stdout=PIPE, close_fds=True)
 			salt_output = salt_call.stdout.read()
 			fd.write("\n++++\n")
-			fd.write(salt_output)
+			fd.write(changesonlyout(salt_output))
 
 
 			rsend["return"].append(json.loads(salt_output.strip()))
