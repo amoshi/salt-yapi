@@ -31,7 +31,6 @@ class S(BaseHTTPRequestHandler):
 					if type(v) is not int:
 						if len(v['changes']) >=1 :
 							rsr['return'].append({r: {k: v }})
-
 		return(rsr)
 
 	def do_POST(self):
