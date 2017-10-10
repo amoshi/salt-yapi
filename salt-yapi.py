@@ -29,7 +29,7 @@ class S(BaseHTTPRequestHandler):
 			for r  in return_:
 				for k, v in return_[r].items():
 					if type(v) is not int:
-						if 'diff' in v['changes']:
+						if len(v['changes']) >=1 :
 							rsr['return'].append({r: {k: v }})
 		return(rsr)
 
