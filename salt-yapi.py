@@ -2,6 +2,7 @@
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import SocketServer
 import json
+from collections import defaultdict
 from subprocess import Popen, PIPE, STDOUT
 from notifications import send_notification
 
@@ -26,11 +27,13 @@ class S(BaseHTTPRequestHandler):
 		rsr={}
 		rsr['return']=[]
 		for return_ in salt_out['return']:
+			res = defaultdict(dict)
 			for r  in return_:
 				for k, v in return_[r].items():
 					if type(v) is not int:
-						if len(v['changes']) >=1 :
-							rsr['return'].append({r: {k: v }})
+						if v['changes']:
+							res[r][k] = v
+			rsr['return'].append(res)
 		return(rsr)
 
 	def do_POST(self):
