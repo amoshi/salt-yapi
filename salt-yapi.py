@@ -5,7 +5,7 @@ import json
 from subprocess import Popen, PIPE, STDOUT
 from notifications import send_notification
 
-allowed_fun = ["state.sls", "state.highstate", "cmd.run", "pillar.get", "grains.get", "service.restart", "service.status"]
+allowed_fun = ["state.sls", "state.highstate", "cmd.run", "pillar.get", "grains.get", "service.restart", "service.status", "test.ping"]
 
 class S(BaseHTTPRequestHandler):
 	def _set_headers(self):
@@ -105,11 +105,11 @@ class S(BaseHTTPRequestHandler):
 				self.wfile.write('{"type":"error","class":"not allowed","variable":"fun","msg":"fun \"' + fun + '\" is not allowed"}\n')
 				return
 
-			if len(api_query["arg"]) != 0:
+			if len(api_query.get("arg","")) != 0:
 				salt_arg = api_query["arg"][0]
 				call_cli_cmd.append(salt_arg)
 
-			if len(api_query["arg"]) > 1:
+			if len(api_query.get("arg","")) > 1:
 				saltenv = api_query["arg"][1]
 				call_cli_cmd.append("saltenv={saltenv}".format(saltenv=saltenv))
 			else:
@@ -149,7 +149,10 @@ class S(BaseHTTPRequestHandler):
 		fd.write("\n-----\n")
 		#send_notification(api_json_arr, call_cli_str, " ")
 		fd.close()
-		self.wfile.write(json.dumps(self.changesonlyout(rsend)))
+		if ( fun == "test.ping" ):
+			self.wfile.write(json.dumps(rsend))
+		else:
+			self.wfile.write(json.dumps(self.changesonlyout(rsend)))
 				
 def run(server_class=HTTPServer, handler_class=S, port=8082):
 	server_address = ('', port)
