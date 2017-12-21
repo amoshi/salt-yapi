@@ -2,10 +2,11 @@
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import SocketServer
 import json
+from collections import defaultdict
 from subprocess import Popen, PIPE, STDOUT
 from notifications import send_notification
 
-allowed_fun = ["state.sls", "state.highstate", "cmd.run", "pillar.get", "grains.get", "service.restart", "service.status", "test.ping"]
+allowed_fun = ["state.sls", "state.highstate", "cmd.run", "pillar.get", "grains.get","grains.setval", "service.restart", "service.status", "test.ping"]
 
 class S(BaseHTTPRequestHandler):
 	def _set_headers(self):
@@ -25,12 +26,15 @@ class S(BaseHTTPRequestHandler):
 	def changesonlyout(self, salt_out):
 		rsr={}
 		rsr['return']=[]
+		print(salt_out)
 		for return_ in salt_out['return']:
+			res = defaultdict(dict)
 			for r  in return_:
 				for k, v in return_[r].items():
 					if type(v) is not int:
-						if 'diff' in v['changes']:
-							rsr['return'].append({r: {k: v }})
+						if v['changes']:
+							res[r][k] = v
+			rsr['return'].append(res)
 		return(rsr)
 
 	def do_POST(self):
@@ -110,8 +114,12 @@ class S(BaseHTTPRequestHandler):
 				call_cli_cmd.append(salt_arg)
 
 			if len(api_query.get("arg","")) > 1:
-				saltenv = api_query["arg"][1]
-				call_cli_cmd.append("saltenv={saltenv}".format(saltenv=saltenv))
+				if ( fun.startswith("grains") ):
+					var2 = api_query["arg"][1]
+					call_cli_cmd.append("{var2}".format(var2=var2))
+				else:
+					saltenv = api_query["arg"][1]
+					call_cli_cmd.append("saltenv={saltenv}".format(saltenv=saltenv))
 			else:
 				saltenv = salt_kwarg.get("saltenv", None)
 				if saltenv is None:
@@ -151,6 +159,8 @@ class S(BaseHTTPRequestHandler):
 		fd.close()
 		if ( fun == "test.ping" ):
 			self.wfile.write(json.dumps(rsend))
+		elif (fun == "grains.setval"):
+			self.wfile.write(json.dumps(rsend))
 		else:
 			self.wfile.write(json.dumps(self.changesonlyout(rsend)))
 				
@@ -167,3 +177,4 @@ if __name__ == "__main__":
 		run(port=int(argv[1]))
 	else:
 		run()
+
