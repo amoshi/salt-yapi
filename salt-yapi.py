@@ -4,9 +4,9 @@ import SocketServer
 import json
 from collections import defaultdict
 from subprocess import Popen, PIPE, STDOUT
-from notifications import send_notification
+#from notifications import send_notification
 
-allowed_fun = ["state.sls", "state.highstate", "cmd.run", "pillar.get", "grains.get","grains.setval", "service.restart", "service.status", "test.ping"]
+allowed_fun = ["state.sls", "state.highstate", "cmd.run", "pillar.get", "grains.get","grains.setval", "service.restart", "service.status", "test.ping", "pkg.install"]
 
 class S(BaseHTTPRequestHandler):
 	def _set_headers(self):
@@ -94,6 +94,12 @@ class S(BaseHTTPRequestHandler):
 				batch_size = api_query.get("batch-size", None)
 			if batch_size is not None:
 				call_cli_cmd.append("--batch-size={batch_size}".format(batch_size=batch_size))
+
+			batch_wait = salt_kwarg.get("batch-wait", None)
+			if batch_wait is None:
+				batch_wait = api_query.get("batch-wait", None)
+			if batch_wait is not None:
+				call_cli_cmd.append("--batch-wait={batch_wait}".format(batch_wait=batch_wait))
 
 			expr_form = api_query.get("expr_form", None)
 			if expr_form is not None:
