@@ -4,6 +4,7 @@ import SocketServer
 import json
 from collections import defaultdict
 from subprocess import Popen, PIPE, STDOUT
+from pam import authenticate
 #from notifications import send_notification
 
 allowed_fun = ["state.sls", "state.highstate", "cmd.run", "pillar.get", "grains.get","grains.setval", "service.restart", "service.status", "test.ping", "pkg.install"]
@@ -36,6 +37,8 @@ class S(BaseHTTPRequestHandler):
 							res[r][k] = v
 			rsr['return'].append(res)
 		return(rsr)
+        def user_validate(username, password):
+		return authenticate(username, password)
 
 	def do_POST(self):
 		content_length = int(self.headers['Content-Length'])
@@ -67,10 +70,14 @@ class S(BaseHTTPRequestHandler):
 			if api_query["password"] is None:
 				self.wfile.write('{"type":"error","class":"not defined","variable":"password","msg":"password is not defined"}\n')
 				return
+
 			salt_args = api_query.get("arg", "")
 			username = api_query.get("username", "")
 			password = api_query.get("password", "")
 			salt_kwarg = api_query.get("kwarg", {})
+			if user_validate(username, password) == False:
+				self.wfile.write('{"type":"error","class":"login","variable":"user","msg":"failed login"}\n')
+				return
 
 			state_verbose = salt_kwarg.get("state_verbose", False)
 			if not state_verbose:
