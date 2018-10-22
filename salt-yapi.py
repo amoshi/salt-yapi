@@ -37,7 +37,7 @@ class S(BaseHTTPRequestHandler):
 							res[r][k] = v
 			rsr['return'].append(res)
 		return(rsr)
-        def user_validate(username, password):
+	def user_validate(self, username, password):
 		return authenticate(username, password)
 
 	def do_POST(self):
@@ -75,7 +75,7 @@ class S(BaseHTTPRequestHandler):
 			username = api_query.get("username", "")
 			password = api_query.get("password", "")
 			salt_kwarg = api_query.get("kwarg", {})
-			if user_validate(username, password) == False:
+			if self.user_validate(username, password) == False:
 				self.wfile.write('{"type":"error","class":"login","variable":"user","msg":"failed login"}\n')
 				return
 
