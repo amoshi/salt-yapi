@@ -96,25 +96,25 @@ class S(BaseHTTPRequestHandler):
 			if out_format == "json":
 				call_cli_cmd.append("-s")
 
-                        if ('batch_size' in salt_kwarg.keys() or 'batch_size' in api_query.keys()):
-                                bsname = 'batch_size'
-                        else:
-                                bsname = 'batch-size'
-                        batch_size = salt_kwarg.get(bsname, None)
-                        if batch_size is None:
-                                batch_size = api_query.get(bsname, None)
-                        if batch_size is not None:
-                                call_cli_cmd.append("--batch-size={batch_size}".format(batch_size=batch_size))
+			if ('batch_size' in salt_kwarg.keys() or 'batch_size' in api_query.keys()):
+				bsname = 'batch_size'
+			else:
+				bsname = 'batch-size'
+			batch_size = salt_kwarg.get(bsname, None)
+			if batch_size is None:
+				batch_size = api_query.get(bsname, None)
+			if batch_size is not None:
+				call_cli_cmd.append("--batch-size={batch_size}".format(batch_size=batch_size))
 
-                        if ('batch_wait' in salt_kwarg.keys() or 'batch_wait' in api_query.keys()):
-                                bwname = 'batch_wait'
-                        else:
-                                bwname = 'batch-wait'
-                        batch_wait = salt_kwarg.get(bwname, None)
-                        if batch_wait is None:
-                                batch_wait = api_query.get(bwname, None)
-                        if batch_wait is not None:
-                                call_cli_cmd.append("--batch-wait={batch_wait}".format(batch_wait=batch_wait))
+			if ('batch_wait' in salt_kwarg.keys() or 'batch_wait' in api_query.keys()):
+				bwname = 'batch_wait'
+			else:
+				bwname = 'batch-wait'
+			batch_wait = salt_kwarg.get(bwname, None)
+			if batch_wait is None:
+				batch_wait = api_query.get(bwname, None)
+			if batch_wait is not None:
+				call_cli_cmd.append("--batch-wait={batch_wait}".format(batch_wait=batch_wait))
 
 			expr_form = api_query.get("expr_form", None)
 			if expr_form is not None:
