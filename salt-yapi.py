@@ -127,7 +127,7 @@ class S(BaseHTTPRequestHandler):
 			if fun in allowed_fun:
 				call_cli_cmd.append(fun)
 			else:
-				self.wfile.write('{"type":"error","class":"not allowed","variable":"fun","msg":"fun \"' + fun + '\" is not allowed"}\n')
+				self.wfile.write('{"type":"error","class":"not allowed","variable":"fun","msg":"fun ' + fun + ' is not allowed"}\n')
 				return
 
 			if len(api_query.get("arg","")) != 0:
