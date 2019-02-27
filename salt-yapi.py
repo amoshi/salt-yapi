@@ -96,17 +96,25 @@ class S(BaseHTTPRequestHandler):
 			if out_format == "json":
 				call_cli_cmd.append("-s")
 
-			batch_size = salt_kwarg.get("batch-size", None)
-			if batch_size is None:
-				batch_size = api_query.get("batch-size", None)
-			if batch_size is not None:
-				call_cli_cmd.append("--batch-size={batch_size}".format(batch_size=batch_size))
+                        if ('batch_size' in salt_kwarg.keys() or 'batch_size' in api_query.keys()):
+                                bs-name = 'batch_size'
+                        else:
+                                bs-name = 'batch-size'
+                        batch_size = salt_kwarg.get(bs-name, None)
+                        if batch_size is None:
+                                batch_size = api_query.get(bs-name, None)
+                        if batch_size is not None:
+                                call_cli_cmd.append("--batch-size={batch_size}".format(batch_size=batch_size))
 
-			batch_wait = salt_kwarg.get("batch-wait", None)
-			if batch_wait is None:
-				batch_wait = api_query.get("batch-wait", None)
-			if batch_wait is not None:
-				call_cli_cmd.append("--batch-wait={batch_wait}".format(batch_wait=batch_wait))
+                        if ('batch_wait' in salt_kwarg.keys() or 'batch_wait' in api_query.keys()):
+                                bw-name = 'batch_wait'
+                        else:
+                                bw-name = 'batch-wait'
+                        batch_wait = salt_kwarg.get(bw-name, None)
+                        if batch_wait is None:
+                                batch_wait = api_query.get(bw-name, None)
+                        if batch_wait is not None:
+                                call_cli_cmd.append("--batch-wait={batch_wait}".format(batch_wait=batch_wait))
 
 			expr_form = api_query.get("expr_form", None)
 			if expr_form is not None:
