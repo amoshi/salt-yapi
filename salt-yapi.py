@@ -7,7 +7,7 @@ from subprocess import Popen, PIPE, STDOUT
 from pam import authenticate
 #from notifications import send_notification
 
-allowed_fun = ["state.sls", "state.highstate", "cmd.run", "pillar.get", "grains.get", "grains.item", "grains.setval", "service.restart", "service.status", "test.ping", "pkg.install"]
+allowed_fun = ["state.sls", "state.highstate", "cmd.run", "pillar.get", "grains.get", "grains.item","grains.setval", "service.restart", "service.status", "test.ping", "pkg.install"]
 
 class S(BaseHTTPRequestHandler):
 	def _set_headers(self):
