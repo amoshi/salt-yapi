@@ -127,7 +127,7 @@ class S(BaseHTTPRequestHandler):
 			if fun in allowed_fun:
 				call_cli_cmd.append(fun)
 			else:
-				self.wfile.write('{"type":"error","class":"not allowed","variable":"fun","msg":"fun \"' + fun + '\" is not allowed"}\n')
+				self.wfile.write('{"type":"error","class":"not allowed","variable":"fun","msg":"fun ' + fun + ' is not allowed"}\n')
 				return
 
 			if len(api_query.get("arg","")) != 0:
@@ -179,6 +179,8 @@ class S(BaseHTTPRequestHandler):
 		#send_notification(api_json_arr, call_cli_str, " ")
 		fd.close()
 		if ( fun == "test.ping" ):
+			self.wfile.write(json.dumps(rsend))
+		elif (fun == "grains.setvals"):
 			self.wfile.write(json.dumps(rsend))
 		elif (fun == "grains.setval"):
 			self.wfile.write(json.dumps(rsend))
