@@ -162,7 +162,7 @@ class S(BaseHTTPRequestHandler):
 					
 			fd.write("\n++++\n")
 			call_cli_str = " ".join(call_cli_cmd)
-			fd.write(call_cli_str)
+			fd.write("[" + tgt + "] " + call_cli_str)
 			#send_notification(api_json_arr, call_cli_str, " ")
 			print call_cli_str
 			salt_call = Popen(call_cli_str, shell=True, stdin=PIPE, stdout=PIPE, close_fds=True)
@@ -174,7 +174,7 @@ class S(BaseHTTPRequestHandler):
 			rsend["return"].append(json.loads(salt_output.strip()))
 
 		fd.write("\n++++\n")
-		fd.write(json.dumps(rsend))
+		fd.write("[" + tgt + "] " + json.dumps(rsend))
 		fd.write("\n-----\n")
 		#send_notification(api_json_arr, call_cli_str, " ")
 		fd.close()
