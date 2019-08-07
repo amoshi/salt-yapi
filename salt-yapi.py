@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-import SocketServer
+from SocketServer import ThreadingMixIn
 import json
 from collections import defaultdict
 from subprocess import Popen, PIPE, STDOUT
@@ -44,7 +44,6 @@ class S(BaseHTTPRequestHandler):
 		content_length = int(self.headers['Content-Length'])
 		post_data = self.rfile.read(content_length)
 		self._set_headers()
-
 		rsend = {}
 		rsend["return"] = []
 		api_json_arr = json.loads(post_data)
@@ -164,7 +163,7 @@ class S(BaseHTTPRequestHandler):
 			call_cli_str = " ".join(call_cli_cmd)
 			fd.write(call_cli_str)
 			#send_notification(api_json_arr, call_cli_str, " ")
-			print call_cli_str
+			print(call_cli_str)
 			salt_call = Popen(call_cli_str, shell=True, stdin=PIPE, stdout=PIPE, close_fds=True)
 			salt_output = salt_call.stdout.read()
 			fd.write("\n++++\n")
@@ -187,10 +186,13 @@ class S(BaseHTTPRequestHandler):
 		else:
 			self.wfile.write(json.dumps(self.changesonlyout(rsend)))
 				
-def run(server_class=HTTPServer, handler_class=S, port=8082):
+class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+	"""Handle requests in a separate thread."""
+
+def run(server_class=ThreadedHTTPServer, handler_class=S, port=8082):
 	server_address = ('', port)
 	httpd = server_class(server_address, handler_class)
-	print 'Starting httpd...'
+	print('Starting httpd...')
 	httpd.serve_forever()
 
 if __name__ == "__main__":
