@@ -31,10 +31,11 @@ class S(BaseHTTPRequestHandler):
 		for return_ in salt_out['return']:
 			res = defaultdict(dict)
 			for r  in return_:
-				for k, v in return_[r].items():
-					if type(v) is not int:
-						if v['changes']:
-							res[r][k] = v
+				if type(return_[r]) == dict:
+					for k, v in return_[r].items():
+						if type(v) is not int:
+							if v['changes']:
+								res[r][k] = v
 			rsr['return'].append(res)
 		return(rsr)
 	def user_validate(self, username, password):
